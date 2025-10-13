@@ -1,0 +1,44 @@
+کافیه بگی:
+
+
+cd E:\YadaTradeBackendNew
+
+venv\Scripts\activate
+
+
+set FLASK_APP=main.py
+
+
+honcho start
+
+netstat -ano | findstr :5000
+taskkill /PID ???? /F
+
+
+خروجی چیزی شبیه این می‌شه:
+
+17:20:01 web.1       | * Running on http://127.0.0.1:5000
+17:20:01 tgju.1      | Starting tgju service...
+17:20:01 scheduler.1 | Scheduler started...
+
+
+هر سرویس لاگ خودش رو با prefix داره، خیلی مرتب.
+
+🔹 مرحله ۴: توقف سرویس‌ها
+
+با CTRL+C همه سرویس‌ها همزمان بسته می‌شن.
+اگر می‌خوای فقط یکی رو اجرا کنی:
+honcho start web
+یا
+honcho start tgju scheduler
+
+
+Frontend
+________________
+cd E:\YadaTradepro-frontend-main
+npm run dev
+taskkill /IM python.exe /F
+
+
+flask run-technical-analysis
+flask run-historical-data

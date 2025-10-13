@@ -1,0 +1,21 @@
+Ignore local development files and folders
+.git
+.gitignore
+.venv/
+.idea/
+.vscode/
+
+Ignore Python specific files and folders
+pycache/
+*.pyc
+
+Ignore large data files that are not needed at build time
+*.pkl
+*.csv
+*.xlsx
+*.log
+
+Ignore build artifacts and temporary folders
+dist/
+build/
+temp/

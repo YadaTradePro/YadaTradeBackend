@@ -1,0 +1,30 @@
+cd D:\Mahdi\Personal\YadaTradeBackendNew
+py -3.11 -m venv venv_311
+venv_311\Scripts\activate
+
+
+venv\Scripts\activate
+set FLASK_APP=main.py
+
+
+cd "D:\Mahdi\Personal\YadaTradepro-frontend-main"
+cd "D:\Mahdi\New Backend\YadaTradepro-frontend-main"
+npm run dev
+set NODE_OPTIONS=--max-old-space-size=16384 && npm run dev
+
+
+cd "D:\Mahdi\New Backend\YadaTradeBackendNew"
+py -3.11 -m venv new_venv_py11 		(py -3.11 -m venv venv_311)
+.\new_venv_py11\Scripts\activate
+set FLASK_APP=main.py
+honcho start
+
+netstat -ano | findstr :5000
+taskkill /PID ???? /F
+
+
+pip install "D:\Mahdi\New Backend\YadaTradeBackendNew\pytse_client-0.19.1-py3-none-any.whl"
+pip install -r requirements.txt
+
+
+https://brsapi.ir/Api/Tsetmc/AllSymbols.php?key=BvhdYHBjqiyIQ7eTuQBKN17ZuLpHkQZ1&type=1

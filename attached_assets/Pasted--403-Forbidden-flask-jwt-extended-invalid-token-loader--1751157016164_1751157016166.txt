@@ -1,0 +1,42 @@
+۱. مشکل اصلی:
+کاربر با خطای 403 Forbidden (که توسط flask_jwt_extended.invalid_token_loader با پیام "Signature verification failed" برگردانده می‌شود) هنگام تلاش برای دسترسی به Endpoints محافظت شده (مانند /api/analysis/technical_analysis) مواجه شده است، علی‌رغم اینکه به نظر می‌رسد JWT_SECRET_KEY در config.py و Secrets Replit به درستی تنظیم شده و jwt.io توکن تولید شده را "Verified" می‌کند.
+
+۲. بررسی و اقدامات انجام شده به ترتیب زمانی:
+
+بررسی اولیه config.py (اولین کد ارسالی):
+
+مشکل شناسایی شده: SECRET_KEY و JWT_SECRET_KEY به صورت Hardcode در فایل config.py تنظیم شده بودند و از os.environ.get() برای خواندن از متغیرهای محیطی استفاده نمی‌کردند.
+
+اقدام: توصیه شد config.py را اصلاح کرده و از os.environ.get() برای بارگذاری این کلیدها استفاده شود تا مقادیر از بخش "Secrets" در Replit خوانده شوند.
+
+بررسی main.py و config.py پس از اصلاح:
+
+مشکل شناسایی شده: مشخص شد که یک خط Hardcode موقتی برای app.config['JWT_SECRET_KEY'] در main.py وجود داشت که config.py را نادیده می‌گرفت.
+
+اقدام: توصیه شد این خط Hardcode از main.py حذف یا کامنت شود.
+
+تست لاگینگ: یک دستور print(f"JWT_SECRET_KEY in app config: {app.config['JWT_SECRET_KEY']}") در main.py اضافه شد تا تأیید شود Flask چه کلیدی را در زمان اجرا بارگذاری می‌کند.
+
+نتیجه تست لاگینگ (بعد از اصلاحات بالا):
+
+مشکل: با وجود تمام اصلاحات، کاربر گزارش داد که لاگ‌ها مقدار صحیح JWT_SECRET_KEY (831551df5724bb616855dfd03b8a41b67ca9d95543ae8ea0) را نشان می‌دهند، اما همچنان خطای 403 Forbidden رخ می‌دهد.
+
+تفسیر: این نتیجه بسیار غیرعادی بود، زیرا اگر Flask کلید صحیح را بارگذاری کند، و jwt.io هم توکن را تأیید کند، مشکل نباید Signature verification failed باشد. این نشان‌دهنده یک مشکل عمیق‌تر و غیرمنطقی بود.
+
+بررسی بیشتر محیط و تنظیمات:
+
+پاک کردن کش و دیتابیس: چندین بار توصیه شد که __pycache__ و فایل دیتابیس (app.db) حذف شوند تا هرگونه اطلاعات کش شده یا قدیمی از بین برود.
+
+ایجاد کاربر و توکن جدید: همیشه توصیه شد که پس از هر تغییر مهم، یک کاربر جدید ثبت‌نام و یک توکن JWT کاملاً جدید دریافت و استفاده شود.
+
+بررسی ساعت سرور و کلاینت: برای رد کردن مشکل NBF (Not Before) یا EXP (Expiration) توکن، بررسی شد که آیا ساعت سرور Replit با ساعت محلی کاربر هماهنگ است یا خیر. این مورد مشکلی نداشت.
+
+بررسی پیاده‌سازی Flask-JWT-Extended و Flask-RESTx: تأیید شد که کدهای مربوط به راه‌اندازی JWTManager و Api (شامل authorizations و security='Bearer Auth') در main.py و استفاده از @jwt_required() و @analysis_ns.doc(security='Bearer Auth') در routes/analysis.py صحیح هستند.
+
+فعال‌سازی لاگینگ دقیق‌تر:
+
+اقدام: خط logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s') به بالای main.py اضافه شد تا جزئیات لاگینگ بیشتری در کنسول نمایش داده شود.
+
+بررسی فایل routes/analysis.py:
+
+مشکل: هیچ مشکل منطقی یا پیکربندی در این فایل که بتواند مستقیماً منجر به خطای 403 "Signature verification failed" شود، شناسایی نشد. منطق واکشی داده‌ها، تحلیل تکنیکال، و Endpointها به نظر درست می‌رسند.

@@ -1,0 +1,40 @@
+entrypoint = "main.py"
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["cargo", "glibcLocales", "libiconv", "pietrasanta-traceroute", "rustc", "lsof"]
+
+[unitTest]
+language = "python3"
+
+[gitHubImport]
+requiredFiles = [".replit", "replit.nix"]
+
+[deployment]
+run = ["python3", "bash run_all.sh"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
+[workflows]
+runButton = "Setup and Run"
+
+[[workflows.workflow]]
+name = "Setup and Run"
+author = 44344250
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python setup_migrations.py"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash run_all.sh"

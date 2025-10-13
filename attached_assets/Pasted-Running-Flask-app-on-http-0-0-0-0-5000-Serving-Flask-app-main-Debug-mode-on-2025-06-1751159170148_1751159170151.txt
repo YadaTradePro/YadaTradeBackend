@@ -1,0 +1,24 @@
+Running Flask app on http://0.0.0.0:5000...
+ * Serving Flask app 'main'
+ * Debug mode: on
+2025-06-29 01:03:19,453 - werkzeug - INFO - WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.74:5000
+2025-06-29 01:03:19,453 - werkzeug - INFO - Press CTRL+C to quit
+2025-06-29 01:03:19,454 - werkzeug - INFO -  * Restarting with stat
+Running Flask app on http://0.0.0.0:5000...
+2025-06-29 01:03:20,651 - werkzeug - WARNING -  * Debugger is active!
+2025-06-29 01:03:20,652 - werkzeug - INFO -  * Debugger PIN: 113-343-718
+2025-06-29 01:03:21,334 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:21] "GET / HTTP/1.1" 200 -
+2025-06-29 01:03:42,051 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:42] "GET / HTTP/1.1" 200 -
+2025-06-29 01:03:51,241 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:51] "GET /api/swagger-ui/ HTTP/1.1" 200 -
+2025-06-29 01:03:51,578 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:51] "GET /swaggerui/droid-sans.css HTTP/1.1" 304 -
+2025-06-29 01:03:51,582 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:51] "GET /swaggerui/swagger-ui-bundle.js HTTP/1.1" 304 -
+2025-06-29 01:03:51,583 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:51] "GET /swaggerui/swagger-ui.css HTTP/1.1" 304 -
+2025-06-29 01:03:51,893 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:51] "GET /swaggerui/swagger-ui-standalone-preset.js HTTP/1.1" 304 -
+2025-06-29 01:03:52,238 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:52] "GET /swaggerui/favicon-32x32.png HTTP/1.1" 304 -
+2025-06-29 01:03:52,627 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:03:52] "GET /api/swagger.json HTTP/1.1" 200 -
+2025-06-29 01:04:30,129 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:04:30] "POST /api/auth/register HTTP/1.1" 201 -
+2025-06-29 01:04:57,061 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:04:57] "POST /api/auth/login HTTP/1.1" 200 -
+2025-06-29 01:05:42,065 - werkzeug - INFO - 172.31.128.74 - - [29/Jun/2025 01:05:42] "GET /api/analysis/technical_analysis/فولاد HTTP/1.1" 403 -
