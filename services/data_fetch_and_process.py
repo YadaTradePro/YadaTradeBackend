@@ -2178,85 +2178,88 @@ def initial_populate_all_symbols_and_data(db_session, limit: int = None):
 # تابع run_technical_analysis (نسخه بازنویسی شده نهایی)
 # ----------------------------
 
-def run_technical_analysis(db_session: Session, limit: int = None, symbols_list: list = None):
+def run_technical_analysis(db_session: Session, limit: int = None, symbols_list: list = None, batch_size: int = 200):
     """
-    اجرای تحلیل تکنیکال برای نمادها با استفاده از داده‌های تاریخی کامل.
+    اجرای تحلیل تکنیکال در بچ‌های کوچک برای جلوگیری از مصرف زیاد حافظه.
     """
     try:
         logger.info("📈 شروع تحلیل تکنیکال...")
 
-        # کوئری برای دریافت داده‌های تاریخی (بدون تغییر)
-        query = db_session.query(
-            HistoricalData.symbol_id, HistoricalData.symbol_name, HistoricalData.date, HistoricalData.jdate, 
-            HistoricalData.open, HistoricalData.close, HistoricalData.high, HistoricalData.low, 
-            HistoricalData.volume, HistoricalData.final, HistoricalData.yesterday_price, HistoricalData.plc, 
-            HistoricalData.plp, HistoricalData.pcc, HistoricalData.pcp, HistoricalData.mv, 
-            HistoricalData.buy_count_i, HistoricalData.buy_count_n, HistoricalData.sell_count_i, 
-            HistoricalData.sell_count_n, HistoricalData.buy_i_volume, HistoricalData.buy_n_volume, 
-            HistoricalData.sell_i_volume, HistoricalData.sell_n_volume
-        )
-        
+        # دریافت لیست یکتا از نمادها
+        symbol_ids_query = db_session.query(HistoricalData.symbol_id).distinct()
         if symbols_list:
-            # تبدیل symbol_list به رشته برای فیلتر
-            symbols_list_str = [str(s) for s in symbols_list]
-            query = query.filter(HistoricalData.symbol_id.in_(symbols_list_str))
-        
-        query = query.order_by(HistoricalData.symbol_id, HistoricalData.date)
+            symbol_ids_query = symbol_ids_query.filter(HistoricalData.symbol_id.in_(symbols_list))
 
-        historical_data = query.all()
+        all_symbols = [row[0] for row in symbol_ids_query.all()]
+        total_symbols = len(all_symbols)
+        logger.info(f"🔍 مجموع {total_symbols} نماد برای تحلیل تکنیکال یافت شد")
 
-        if not historical_data:
-            logger.warning("⚠️ هیچ داده تاریخی برای تحلیل تکنیکال یافت نشد.")
-            return 0, "هیچ داده تاریخی برای تحلیل تکنیکال یافت نشد."
-
-        columns = [
-            'symbol_id', 'symbol_name', 'date', 'jdate', 'open', 'close', 'high', 'low', 'volume',
-            'final', 'yesterday_price', 'plc', 'plp', 'pcc', 'pcp', 'mv',
-            'buy_count_i', 'buy_count_n', 'sell_count_i', 'sell_count_n',
-            'buy_i_volume', 'buy_n_volume', 'sell_i_volume', 'sell_n_volume'
-        ]
-        df = pd.DataFrame(historical_data, columns=columns)
-        
-        grouped = df.groupby('symbol_id')
         processed_count = 0
         success_count = 0
         error_count = 0
-        
-        logger.info(f"🔍 یافت شد {len(grouped)} نماد برای تحلیل تکنیکال")
 
-        for symbol_id, group_df in grouped:
-            if limit is not None and processed_count >= limit:
-                break
-                
-            processed_count += 1
-            try:
-                df_indicators = calculate_all_indicators(group_df)
-                
-                # ✅ فراخوانی تابع ذخیره‌سازی
-                save_technical_indicators(db_session, symbol_id, df_indicators)
-                
-                # 💡 اگر commit در save_technical_indicators انجام شده باشد، اینجا نباید دوباره commit شود. 
-                # با توجه به اینکه commit در save_technical_indicators وجود دارد، این خط را حذف می‌کنیم.
+        # اجرای تحلیل در بچ‌های 200تایی
+        for i in range(0, total_symbols, batch_size):
+            batch_symbols = all_symbols[i:i + batch_size]
+            logger.info(f"📦 پردازش بچ {i // batch_size + 1}: نمادهای {i + 1} تا {min(i + batch_size, total_symbols)}")
 
-                success_count += 1
-                
-                if processed_count % 10 == 0:
-                    logger.info(f"📊 پیشرفت تحلیل تکنیکال: {processed_count}/{len(grouped)} نماد")
-                    
-            except Exception as e:
-                error_count += 1
-                logger.error(f"❌ خطا در تحلیل تکنیکال برای نماد با ID {symbol_id}: {e}")
-                # ✅ FIX: اطمینان از Rollback برای آزاد سازی Session جهت پردازش نماد بعدی
-                db_session.rollback() 
-                
-        logger.info(f"✅ تحلیل تکنیکال کامل شد. {success_count} نماد موفق، {error_count} خطا")
-        return success_count, f"تحلیل تکنیکال کامل شد. {success_count} نماد موفق، {error_count} خطا"
+            query = db_session.query(
+                HistoricalData.symbol_id, HistoricalData.symbol_name, HistoricalData.date, HistoricalData.jdate, 
+                HistoricalData.open, HistoricalData.close, HistoricalData.high, HistoricalData.low, 
+                HistoricalData.volume, HistoricalData.final, HistoricalData.yesterday_price, HistoricalData.plc, 
+                HistoricalData.plp, HistoricalData.pcc, HistoricalData.pcp, HistoricalData.mv, 
+                HistoricalData.buy_count_i, HistoricalData.buy_count_n, HistoricalData.sell_count_i, 
+                HistoricalData.sell_count_n, HistoricalData.buy_i_volume, HistoricalData.buy_n_volume, 
+                HistoricalData.sell_i_volume, HistoricalData.sell_n_volume
+            ).filter(HistoricalData.symbol_id.in_(batch_symbols))
+
+            query = query.order_by(HistoricalData.symbol_id, HistoricalData.date)
+            historical_data = query.all()
+
+            if not historical_data:
+                logger.warning(f"⚠️ هیچ داده‌ای برای این بچ یافت نشد.")
+                continue
+
+            columns = [
+                'symbol_id', 'symbol_name', 'date', 'jdate', 'open', 'close', 'high', 'low', 'volume',
+                'final', 'yesterday_price', 'plc', 'plp', 'pcc', 'pcp', 'mv',
+                'buy_count_i', 'buy_count_n', 'sell_count_i', 'sell_count_n',
+                'buy_i_volume', 'buy_n_volume', 'sell_i_volume', 'sell_n_volume'
+            ]
+            df = pd.DataFrame(historical_data, columns=columns)
+
+            grouped = df.groupby('symbol_id')
+
+            for symbol_id, group_df in grouped:
+                if limit is not None and processed_count >= limit:
+                    break
+
+                processed_count += 1
+                try:
+                    df_indicators = calculate_all_indicators(group_df)
+                    save_technical_indicators(db_session, symbol_id, df_indicators)
+                    success_count += 1
+
+                    if processed_count % 10 == 0:
+                        logger.info(f"📊 پیشرفت تحلیل: {processed_count}/{total_symbols} نماد")
+
+                except Exception as e:
+                    error_count += 1
+                    logger.error(f"❌ خطا در تحلیل نماد {symbol_id}: {e}")
+                    db_session.rollback()
+
+            # 🔹 آزادسازی حافظه‌ی DataFrame بعد از هر بچ
+            del df
+            import gc
+            gc.collect()
+
+        logger.info(f"✅ تحلیل تکنیکال کامل شد. موفق: {success_count} | خطا: {error_count}")
+        return success_count, f"تحلیل کامل شد. {success_count} موفق، {error_count} خطا"
 
     except Exception as e:
-        error_msg = f"خطا در اجرای تحلیل تکنیکال: {e}"
-        logger.error(f"❌ {error_msg}")
-        # اطمینان از Rollback در صورت بروز خطای کلی
-        db_session.rollback() 
+        error_msg = f"❌ خطا در اجرای تحلیل تکنیکال: {e}"
+        logger.error(error_msg)
+        db_session.rollback()
         return 0, error_msg
 
 
@@ -3832,7 +3835,12 @@ if __name__ == "__main__":
 # ----------------------------
 
 __all__ = [
-    # توابع اصلی
+    # توابع کمکی
+    'setup_robust_session'
+
+     # توابع اصلی   
+    'populate_comprehensive_symbols'
+    'fetch_historical_and_fundamental_data'
     'fetch_symbols_from_pytse_client',
     'fetch_and_process_historical_data',
     #'update_historical_data_limited',(DELETED)
