@@ -107,7 +107,8 @@ def run_daily_analysis_flow(db_session: Session = None):
 
     # 1. به‌روزرسانی داده‌های پایان روز (EOD)
     logger.info("➡️ مرحله 1/3: فراخوانی update_daily_eod_from_brsapi")
-    update_daily_eod_from_brsapi()
+    # ===> تغییر اعمال شده: ارسال db_session به تابع <===
+    update_daily_eod_from_brsapi(db_session=db_session) 
     logger.info("✅ مرحله 1/3: update_daily_eod_from_brsapi با موفقیت انجام شد.")
 
     # 2. اجرای تحلیل تکنیکال (نیاز به داده‌های به‌روز شده دارد)
@@ -126,32 +127,32 @@ def run_daily_analysis_flow(db_session: Session = None):
 
 # ----------------- Job Definitions -----------------
 JOBS = [
-    # 🟢 وظایف روزانه  
+    # 🟢 وظایف روزانه  
 
-    {"id": "daily_analysis_flow_job", "func": with_context_and_error_handling(run_daily_analysis_flow), "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 17, "minute": 0},
+    {"id": "daily_analysis_flow_job", "func": run_daily_analysis_flow, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 22, "minute": 26}, # تابع از قبل دکوریت شده است
 
-    {"id": "daily_sector_analysis_job", "func": with_context_and_error_handling(run_daily_sector_analysis), "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 18, "minute": 0},
-    {"id": "generate_daily_summary_job", "func": with_context_and_error_handling(market_analysis_service.generate_market_summary), "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 18, "minute": 15},
+    {"id": "daily_sector_analysis_job", "func": run_daily_sector_analysis, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 22, "minute": 29},
+    {"id": "generate_daily_summary_job", "func": market_analysis_service.generate_market_summary, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 22, "minute": 31},
 
-    {"id": "potential_buy_queues_job", "func": with_context_and_error_handling(run_potential_buy_queue_analysis_and_save), "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 7, "minute": 15},
+    {"id": "potential_buy_queues_job", "func": run_potential_buy_queue_analysis_and_save, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 7, "minute": 15},
 
-    {"id": "update_ml_outcomes_job", "func": with_context_and_error_handling(update_ml_prediction_outcomes), "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 8, "minute": 0},
+    {"id": "update_ml_outcomes_job", "func": update_ml_prediction_outcomes, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 8, "minute": 0},
 
     # 🟡 وظایف هفتگی
 
-    {"id": "weekly_watchlist_performance_job", "func": with_context_and_error_handling(evaluate_weekly_watchlist_performance), "trigger": "cron", "day_of_week": "wed", "hour": 22, "minute": 0},
-    {"id": "weekly_watchlist_selection_job", "func": with_context_and_error_handling(run_weekly_watchlist_selection), "trigger": "cron", "day_of_week": "wed", "hour": 22, "minute": 30},
+    {"id": "weekly_watchlist_performance_job", "func": evaluate_weekly_watchlist_performance, "trigger": "cron", "day_of_week": "wed", "hour": 22, "minute": 0},
+    {"id": "weekly_watchlist_selection_job", "func": run_weekly_watchlist_selection, "trigger": "cron", "day_of_week": "wed", "hour": 22, "minute": 30},
 
-    {"id": "run_golden_key_filters_job", "func": with_context_and_error_handling(run_golden_key_analysis_and_save), "trigger": "cron", "day_of_week": "sun, tue, wed", "hour": 23, "minute": 30},
+    {"id": "run_golden_key_filters_job", "func": run_golden_key_analysis_and_save, "trigger": "cron", "day_of_week": "sun, tue, wed", "hour": 23, "minute": 30},
 
-    {"id": "update_exit_prices_job", "func": with_context_and_error_handling(market_analysis_service.update_evaluated_prices_job), "trigger": "cron", "day_of_week": "thu", "hour": 4, "minute": 0},
-    {"id": "daily_light_update_job", "func": with_context_and_error_handling(run_daily_update), "trigger": "cron", "day_of_week": "thu", "hour": 16, "minute": 0, "coalesce": True, "max_instances": 1}, # ✅ Job نیازمند db_session است
+    {"id": "update_exit_prices_job", "func": market_analysis_service.update_evaluated_prices_job, "trigger": "cron", "day_of_week": "thu", "hour": 4, "minute": 0},
+    {"id": "daily_light_update_job", "func": run_daily_update, "trigger": "cron", "day_of_week": "thu", "hour": 16, "minute": 0, "coalesce": True, "max_instances": 1}, 
 
-    {"id": "generate_ml_predictions_job", "func": with_context_and_error_handling(generate_and_save_predictions_for_watchlist), "trigger": "cron", "day_of_week": "thu", "hour": 2, "minute": 0, "coalesce": True, "max_instances": 1}, # ✅ همچنین برای Job های سنگین ML
+    {"id": "generate_ml_predictions_job", "func": generate_and_save_predictions_for_watchlist, "trigger": "cron", "day_of_week": "thu", "hour": 2, "minute": 0, "coalesce": True, "max_instances": 1}, 
     
-    # ⚪️ سایر وظایف   
-    {"id": "run-maintenance-update", "func": with_context_and_error_handling(run_full_data_update), "trigger": "cron", "day": 1, "hour": 16, "minute": 50, "coalesce": True, "max_instances": 1},
-   
+    # ⚪️ سایر وظایف   
+    {"id": "run-maintenance-update", "func": run_full_data_update, "trigger": "cron", "day": 1, "hour": 16, "minute": 50, "coalesce": True, "max_instances": 1},
+    
 ]
 
 TIMEZONE = "Asia/Tehran"
@@ -165,11 +166,15 @@ def run_scheduler_app():
 
     for job in JOBS:
         try:
-            # 💡 توجه: تابع run_daily_analysis_flow قبلاً در خود تعریف از دکوراتور with_context_and_error_handling استفاده کرده است.
-            # برای جلوگیری از اعمال دکوراتور دو بار، شرط می‌گذاریم
+            # 💡 این بخش از کد، دکوراتور with_context_and_error_handling را به تابع اعمال می‌کند، مگر اینکه قبلاً اعمال شده باشد.
+            # به جای شرط پیچیده، می‌توانیم فرض کنیم که تمام توابع در لیست JOBS خام (بدون دکوراتور) هستند
+            # به جز run_daily_analysis_flow که در تعریفش دکوریت شده است.
             func_to_schedule = job["func"]
+
+            # اگر تابع قبلاً توسط دکوراتور ما پیچیده نشده باشد، آن را می‌پیچیم.
+            # برای سادگی، run_daily_analysis_flow را از این اعمال دکوراتور در حلقه نهایی حذف می‌کنیم.
             if job["id"] != "daily_analysis_flow_job":
-                 func_to_schedule = with_context_and_error_handling(job["func"])
+                func_to_schedule = with_context_and_error_handling(job["func"])
             
             scheduler.add_job(
                 id=job["id"],
