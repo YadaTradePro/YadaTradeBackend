@@ -817,14 +817,19 @@ class DebugTehranStocksStructureResource(Resource):
 
 
 
-#Market Summary
+# Market Summary
 @analysis_ns.route('/market-summary')
 class MarketSummaryResource(Resource):
     def get(self):
         """
-        Generates and returns a summary of the market analysis.
-        This endpoint provides a daily or weekly market report.
+        Generates and returns a structured summary of the market analysis.
+        Provides a daily or weekly report in JSON format.
         """
         current_app.logger.info("API request for market summary.")
-        summary_text = market_analysis_service.generate_market_summary()
-        return {'summary': summary_text}, 200            
+        
+        # ✅ این تابع اکنون یک دیکشنری کامل (نه فقط متن) برمی‌گرداند
+        summary_data = market_analysis_service.generate_market_summary()
+        
+        # ✅ دیکشنری را مستقیماً برگردانید. 
+        # Flask-RESTX به صورت خودکار آن را به JSON تبدیل می‌کند.
+        return summary_data, 200
