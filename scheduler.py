@@ -129,29 +129,28 @@ def run_daily_analysis_flow(db_session: Session = None):
 JOBS = [
     # 🟢 وظایف روزانه  
 
-    {"id": "daily_analysis_flow_job", "func": run_daily_analysis_flow, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 22, "minute": 26}, # تابع از قبل دکوریت شده است
+    {"id": "daily_analysis_flow_job", "func": run_daily_analysis_flow, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 16, "minute": 30}, # تابع از قبل دکوریت شده است
 
-    {"id": "daily_sector_analysis_job", "func": run_daily_sector_analysis, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 22, "minute": 29},
-    {"id": "generate_daily_summary_job", "func": market_analysis_service.generate_market_summary, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 22, "minute": 31},
+    {"id": "daily_sector_analysis_job", "func": run_daily_sector_analysis, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 16, "minute": 32},
+    {"id": "generate_daily_summary_job", "func": market_analysis_service.generate_market_summary, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 16, "minute": 34},
 
-    {"id": "potential_buy_queues_job", "func": run_potential_buy_queue_analysis_and_save, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 7, "minute": 15},
+    {"id": "potential_buy_queues_job", "func": run_potential_buy_queue_analysis_and_save, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 17, "minute": 35},
 
-    {"id": "update_ml_outcomes_job", "func": update_ml_prediction_outcomes, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 8, "minute": 0},
+    {"id": "update_ml_outcomes_job", "func": update_ml_prediction_outcomes, "trigger": "cron", "day_of_week": "sat, sun, mon, tue, wed", "hour": 17, "minute": 0},
 
     # 🟡 وظایف هفتگی
 
     {"id": "weekly_watchlist_performance_job", "func": evaluate_weekly_watchlist_performance, "trigger": "cron", "day_of_week": "wed", "hour": 22, "minute": 0},
     {"id": "weekly_watchlist_selection_job", "func": run_weekly_watchlist_selection, "trigger": "cron", "day_of_week": "wed", "hour": 22, "minute": 30},
 
-    {"id": "run_golden_key_filters_job", "func": run_golden_key_analysis_and_save, "trigger": "cron", "day_of_week": "sun, tue, wed", "hour": 23, "minute": 30},
+    {"id": "run_golden_key_filters_job", "func": run_golden_key_analysis_and_save, "trigger": "cron", "day_of_week": "sun, tue, wed", "hour": 18, "minute": 30},
 
-    {"id": "update_exit_prices_job", "func": market_analysis_service.update_evaluated_prices_job, "trigger": "cron", "day_of_week": "thu", "hour": 4, "minute": 0},
-    {"id": "daily_light_update_job", "func": run_daily_update, "trigger": "cron", "day_of_week": "thu", "hour": 16, "minute": 0, "coalesce": True, "max_instances": 1}, 
+    #{"id": "daily_light_update_job", "func": run_daily_update, "trigger": "cron", "day_of_week": "thu", "hour": 16, "minute": 0, "coalesce": True, "max_instances": 1}, 
 
     {"id": "generate_ml_predictions_job", "func": generate_and_save_predictions_for_watchlist, "trigger": "cron", "day_of_week": "thu", "hour": 2, "minute": 0, "coalesce": True, "max_instances": 1}, 
     
     # ⚪️ سایر وظایف   
-    {"id": "run-maintenance-update", "func": run_full_data_update, "trigger": "cron", "day": 1, "hour": 16, "minute": 50, "coalesce": True, "max_instances": 1},
+    #{"id": "run-maintenance-update", "func": run_full_data_update, "trigger": "cron", "day": 1, "hour": 16, "minute": 50, "coalesce": True, "max_instances": 1},
     
 ]
 
