@@ -230,6 +230,20 @@ def _analyze_market_sentiment(df: pd.DataFrame, raw_indices_data: Dict) -> Dict:
     DataFrame داده‌های روزانه را تحلیل کرده و یک دیکشنری جامع از معیارهای سنتیمنت بازار برمی‌گرداند.
     محاسبات جریان پول، سرانه و ارزش معاملات فقط برای نمادهای بورس و فرابورس انجام می‌شود.
     """
+    
+    # 🔑 تابع کمکی داخلی برای تبدیل ایمن درصد به عدد (رفع خطای TypeError)
+    def _get_safe_percent(index_data: Dict, key: str = 'percent') -> float:
+        """مقدار درصد را به float تبدیل می‌کند، اگر None یا نامعتبر بود، 0.0 برمی‌گرداند."""
+        value = index_data.get(key)
+        try:
+            # اگر value، None نباشد، آن را به float تبدیل کن
+            if value is not None:
+                return float(value)
+            return 0.0
+        except (TypeError, ValueError):
+            # اگر تبدیل موفق نبود، 0.0 برگردان
+            return 0.0
+
     sentiment_data = {}
     
     # 0. آماده‌سازی DataFrame و فیلتر کردن نمادها
@@ -272,14 +286,23 @@ def _analyze_market_sentiment(df: pd.DataFrame, raw_indices_data: Dict) -> Dict:
     
     # ۱. تحلیل شاخص‌ها (بدون فیلتر کردن، چون داده‌های شاخص جداگانه هستند)
     total_index = raw_indices_data.get('Total_Index', {})
+    # 🔑 استفاده از تابع کمکی برای ایمن‌سازی
+    total_percent = _get_safe_percent(total_index)
+    
     sentiment_data['total_index'] = {
         'value': total_index.get('value', 'N/A'),
-        'status': 'صعودی' if total_index.get('percent', 0) > 0 else ('نزولی' if total_index.get('percent', 0) < 0 else 'بدون تغییر')
+        # مقایسه با استفاده از مقدار ایمن شده total_percent
+        'status': 'صعودی' if total_percent > 0 else ('نزولی' if total_percent < 0 else 'بدون تغییر')
     }
+    
     equal_weighted_index = raw_indices_data.get('Equal_Weighted_Index', {})
+    # 🔑 استفاده از تابع کمکی برای ایمن‌سازی
+    equal_percent = _get_safe_percent(equal_weighted_index)
+    
     sentiment_data['equal_weighted_index'] = {
         'value': equal_weighted_index.get('value', 'N/A'),
-        'status': 'صعودی' if equal_weighted_index.get('percent', 0) > 0 else ('نزولی' if equal_weighted_index.get('percent', 0) < 0 else 'بدون تغییر')
+        # مقایسه با استفاده از مقدار ایمن شده equal_percent
+        'status': 'صعودی' if equal_percent > 0 else ('نزولی' if equal_percent < 0 else 'بدون تغییر')
     }
 
     # ۲. تحلیل ارزش معاملات (فقط بورس و فرابورس)
