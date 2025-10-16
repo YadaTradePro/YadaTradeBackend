@@ -119,7 +119,7 @@ def _get_day_type() -> str:
     day_name = j_today.strftime('%A') 
     if day_name in ('Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'):
         return 'daily'
-    if day_name == 'Friday':
+    if day_name in ('Friday, Thursday'):
         return 'weekly'
     return 'no_analysis_day'
 
@@ -496,16 +496,20 @@ def _generate_weekly_summary() -> Dict[str, Any]: # 💡 تغییر نوع با�
         # 4. بازیابی نتایج واچ‌لیست (نمادهایی که ورود آنها در ۵ روز اخیر بوده است)
         weekly_watchlist_records = WeeklyWatchlistResult.query.filter(WeeklyWatchlistResult.jentry_date >= start_date_j).all()
         
+        # 🚨 رفع خطا: تبدیل آبجکت‌های ORM به دیکشنری استاندارد برای استفاده در 'all_symbols'
+        # متغیر final_symbols_list در تابع هفتگی تعریف نشده بود.
+        final_weekly_symbols_list = [_map_watchlist_result_to_dict(record) for record in weekly_watchlist_records]
+        
         # 5. خلاصه صنایع برتر (خروجی JSON List)
-        sector_summary_list = _get_top_sectors_summary(db.session, limit=3) # 💡 تغییر نام متغیر
+        sector_summary_list = _get_top_sectors_summary(db.session, limit=4) 
         
         # 6. ایجاد خروجی نهایی
         data_for_template = {
             'jdate': jdatetime.date.today().strftime('%Y-%m-%d'),
             'indices_data': indices_for_template,
             'smart_money_flow_text': smart_money_text,
-            'sector_summary': sector_summary_list, # 💡 استفاده از لیست دیکشنری‌ها
-            'all_symbols': final_symbols_list,
+            'sector_summary': sector_summary_list,
+            'all_symbols': final_weekly_symbols_list,
             'symbols_text': _get_formatted_symbols_text(weekly_watchlist_records, is_weekly=True)
         }
         
